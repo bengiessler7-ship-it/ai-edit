@@ -1,0 +1,2 @@
+import fs from "fs"; import { NextResponse } from "next/server"; import { checkFFmpegInstalled } from "@/lib/localRenderer"; import { STORAGE } from "@/lib/constants";
+export async function GET(){ const ffmpeg=checkFFmpegInstalled(); const storageExists=Object.values(STORAGE).every((d)=>fs.existsSync(d)); const writable=(()=>{ try{ fs.accessSync(STORAGE.root, fs.constants.W_OK); return true;}catch{return false;} })(); return NextResponse.json({ffmpeg,storageExists,writable}); }
