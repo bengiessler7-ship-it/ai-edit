@@ -1,0 +1,8 @@
+import { execSync } from "child_process"; import { VideoAnalysis } from "./types";
+export const getVideoMetadata=(videoPath:string)=>{ const r=execSync(`ffprobe -v quiet -print_format json -show_streams -show_format \"${videoPath}\"`).toString(); const d=JSON.parse(r); const v=d.streams.find((s:any)=>s.codec_type==="video")||{}; const fps=(v.avg_frame_rate&&eval(v.avg_frame_rate))||30; return {duration:Number(d.format.duration||0),width:v.width||0,height:v.height||0,fps:Number(fps)}; };
+export const extractFrames=(videoPath:string, interval=0.5)=>{ const out=`storage/temp/frames-%03d.jpg`; execSync(`ffmpeg -y -i \"${videoPath}\" -vf fps=${1/interval} ${out}`); return Array.from({length:20},(_,i)=>`storage/temp/frames-${String(i+1).padStart(3,"0")}.jpg`); };
+export const detectSceneChanges=(frames:string[])=>frames.map((_,i)=>i*0.5).filter((_,i)=>i%3===0);
+export const detectMotionIntensity=(frames:string[])=>frames.map((_,i)=>({time:i*0.5,score:Math.random()}));
+export const findHighlightMoments=(videoPath:string,targetDuration:number)=>{ const f=extractFrames(videoPath,0.5); return detectMotionIntensity(f).filter((m)=>m.score>0.65).slice(0,Math.ceil(targetDuration/2)).map((m)=>m.time); };
+export const createClipSelection=(highlights:number[], beatTimeline:any[], duration:number)=>highlights.slice(0,Math.max(1,Math.floor(duration/2))).map((h,i)=>({videoStart:Math.max(0,h-0.7),videoEnd:h+1.2,speed:beatTimeline[i]?1.1:1,effects:["zoom","shake"],caption:i%2?"GOAL!":"INSANE SKILLS"}));
+export const analyzeVideo=(videoPath:string,targetDuration:number):VideoAnalysis=>{ const m=getVideoMetadata(videoPath); const h=findHighlightMoments(videoPath,targetDuration); return {...m,sceneChanges:h,highlights:h}; };

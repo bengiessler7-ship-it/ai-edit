@@ -1,0 +1,2 @@
+import fs from "fs"; import { NextResponse } from "next/server"; import { getProject } from "@/lib/projectStore";
+export async function GET(_:Request,{params}:{params:{id:string}}){ const p=getProject(params.id); if(!p?.outputVideoPath||!fs.existsSync(p.outputVideoPath)) return NextResponse.json({error:"Datei fehlt"},{status:404}); const buf=fs.readFileSync(p.outputVideoPath); return new NextResponse(buf,{headers:{"Content-Type":"video/mp4","Content-Disposition":`attachment; filename=${params.id}.mp4`}}); }

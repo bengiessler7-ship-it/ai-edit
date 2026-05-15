@@ -1,0 +1,7 @@
+node_modules
+.next
+storage/uploads
+storage/projects
+storage/renders
+storage/temp
+*.log
